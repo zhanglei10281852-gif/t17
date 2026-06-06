@@ -40,11 +40,17 @@ def profile_to_response(profile: models.Profile) -> schemas.ProfileResponse:
 
 
 def activity_to_response(activity: models.Activity, db: Session) -> schemas.ActivityResponse:
-    male_reg = db.query(models.ActivityRegistration).join(models.Profile).filter(
+    male_reg = db.query(models.ActivityRegistration).join(
+        models.Profile,
+        models.ActivityRegistration.user_id == models.Profile.user_id
+    ).filter(
         models.ActivityRegistration.activity_id == activity.id,
         models.Profile.gender == models.Gender.MALE
     ).count()
-    female_reg = db.query(models.ActivityRegistration).join(models.Profile).filter(
+    female_reg = db.query(models.ActivityRegistration).join(
+        models.Profile,
+        models.ActivityRegistration.user_id == models.Profile.user_id
+    ).filter(
         models.ActivityRegistration.activity_id == activity.id,
         models.Profile.gender == models.Gender.FEMALE
     ).count()
@@ -160,11 +166,17 @@ def register_activity(
     if profile.age < activity.min_age or profile.age > activity.max_age:
         raise HTTPException(status_code=400, detail=f"年龄不符合要求，要求{activity.min_age}-{activity.max_age}岁")
     
-    male_reg = db.query(models.ActivityRegistration).join(models.Profile).filter(
+    male_reg = db.query(models.ActivityRegistration).join(
+        models.Profile,
+        models.ActivityRegistration.user_id == models.Profile.user_id
+    ).filter(
         models.ActivityRegistration.activity_id == activity_id,
         models.Profile.gender == models.Gender.MALE
     ).count()
-    female_reg = db.query(models.ActivityRegistration).join(models.Profile).filter(
+    female_reg = db.query(models.ActivityRegistration).join(
+        models.Profile,
+        models.ActivityRegistration.user_id == models.Profile.user_id
+    ).filter(
         models.ActivityRegistration.activity_id == activity_id,
         models.Profile.gender == models.Gender.FEMALE
     ).count()

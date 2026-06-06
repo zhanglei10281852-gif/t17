@@ -108,20 +108,12 @@ function filterOption(input, option) {
 
 async function loadMembers() {
   try {
-    const data = await api.get('/match/recommendations')
-    const profiles = await Promise.all(
-      data.map(async (item) => {
-        try {
-          const profile = await api.get(`/profile/${item.user_id}`)
-          return profile
-        } catch (e) {
-          return null
-        }
-      })
-    )
-    
-    maleMembers.value = profiles.filter(p => p && p.gender === 'male')
-    femaleMembers.value = profiles.filter(p => p && p.gender === 'female')
+    const [males, females] = await Promise.all([
+      api.get('/matchmaker/members?gender=male'),
+      api.get('/matchmaker/members?gender=female')
+    ])
+    maleMembers.value = males
+    femaleMembers.value = females
   } catch (e) {
     console.error(e)
   }

@@ -9,6 +9,28 @@ from app.security import get_current_matchmaker
 router = APIRouter(prefix="/matchmaker", tags=["红娘工作台"])
 
 
+@router.get("/members", response_model=list[schemas.ProfileResponse])
+def get_all_members(
+    gender: models.Gender = None,
+    status: models.ProfileStatus = None,
+    skip: int = 0,
+    limit: int = 100,
+    current_matchmaker: models.User = Depends(get_current_matchmaker),
+    db: Session = Depends(get_db)
+):
+    query = db.query(models.Profile).join(models.User).filter(
+        models.User.role == models.UserRole.MEMBER
+    )
+    if gender:
+        query = query.filter(models.Profile.gender == gender)
+    if status:
+        query = query.filter(models.Profile.status == status)
+    
+    profiles = query.offset(skip).limit(limit).all()
+    from app.routers.profile import profile_to_response
+    return [profile_to_response(p) for p in profiles]
+
+
 @router.get("/statistics", response_model=schemas.StatisticsResponse)
 def get_statistics(
     current_matchmaker: models.User = Depends(get_current_matchmaker),
