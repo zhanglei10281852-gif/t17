@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: dating-postgres
+    environment:
+      POSTGRES_USER: dating
+      POSTGRES_PASSWORD: dating123
+      POSTGRES_DB: dating_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dating -d dating_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    container_name: dating-backend
+    ports:
+      - "8934:8934"
+    environment:
+      - DATABASE_URL=postgresql://dating:dating123@postgres:5432/dating_db
+      - SECRET_KEY=dating-secret-key-for-jwt-2024
+      - ALGORITHM=HS256
+      - ACCESS_TOKEN_EXPIRE_MINUTES=1440
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+
+  frontend:
+    build: ./frontend
+    container_name: dating-frontend
+    ports:
+      - "8088:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
